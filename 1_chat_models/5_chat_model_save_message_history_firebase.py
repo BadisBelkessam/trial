@@ -3,7 +3,8 @@
 from dotenv import load_dotenv
 from google.cloud import firestore
 from langchain_google_firestore import FirestoreChatMessageHistory
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
+
 
 """
 Steps to replicate this example:
@@ -42,7 +43,7 @@ print("Chat History Initialized.")
 print("Current Chat History:", chat_history.messages)
 
 # Initialize Chat Model
-model = ChatOpenAI()
+model = ChatGroq()
 
 print("Start chatting with the AI. Type 'exit' to quit.")
 
@@ -57,3 +58,21 @@ while True:
     chat_history.add_ai_message(ai_response.content)
 
     print(f"AI: {ai_response.content}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

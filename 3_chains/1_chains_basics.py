@@ -1,16 +1,16 @@
 from dotenv import load_dotenv
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 
 # Load environment variables from .env
 load_dotenv()
 
 # Create a ChatOpenAI model
-model = ChatOpenAI(model="gpt-4o")
+model = ChatGroq(model="gemma2-9b-it")
 
 # Define prompt templates (no need for separate Runnable chains)
-prompt_template = ChatPromptTemplate.from_messages(
+prompt = ChatPromptTemplate.from_messages(
     [
         ("system", "You are a comedian who tells jokes about {topic}."),
         ("human", "Tell me {joke_count} jokes."),
@@ -18,7 +18,7 @@ prompt_template = ChatPromptTemplate.from_messages(
 )
 
 # Create the combined chain using LangChain Expression Language (LCEL)
-chain = prompt_template | model | StrOutputParser()
+chain = prompt | model | StrOutputParser()
 # chain = prompt_template | model
 
 # Run the chain
