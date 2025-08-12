@@ -11,15 +11,15 @@ from pydantic import BaseModel
 
 
 
-#load_dotenv()
+load_dotenv()
 
 app = FastAPI()
 
 
-
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
-supabase: Client = create_client(url, key)
+url: str = os.getenv("SUPABASE_URL")
+skey: str = os.getenv("SUPABASE_KEY")
+key = os.getenv("GROQ_API_KEY")
+supabase: Client = create_client(url, skey)
 
 
 class QueryRequest(BaseModel):
@@ -39,7 +39,7 @@ def chat_endpoint(req: QueryRequest):
 
     model = ChatGroq(
         model="gemma2-9b-it",
-        api_key=GROQ_API_KEY
+        api_key=key
         )
 
 
@@ -117,6 +117,8 @@ def chat_endpoint(req: QueryRequest):
         "target_column": "id"
         ]
     ]
+             AND START with just supabase. not supabase_client or such
+            AND DO NOT USE .from() use : .table()
             AND DO NOT forget the .execute() at the end"""),
             ("user", "{query}"),
         ]
@@ -124,8 +126,8 @@ def chat_endpoint(req: QueryRequest):
 
     formatprompt = ChatPromptTemplate.from_messages(
         [
-            ("system", "you are a text format corrector, the given query is passed from an llm and your job is to make sure it is well coded to be run, what you should do is: remove any text formatting or comments and language specification, and say nothing and explain nothing, the ONLY thing needed from you to output is the two lines from code redirected directly to run so no additional talking no formatting just clean two lines code that are NOT commented so remove any ''' ''' you find -- make sure he is not using .filter() in the wrong, if it is replace it with the .eq() as such ex: .eq('name', 'tipaza')-- AND NOT COMMENTED remove that '''python''' shit, just code"),
-            ("user", "here is the previous llm's output do not forget to not use the ```python``` and just output pure code, literally what you should just output is two lines: line1(response = supabase.from_...), line2(results=response.data) thats it no more no less bitch: {query}"),
+            ("system", "you are a text format corrector, the given query is passed from an llm and your job is to make sure it is well coded to be run, what you should do is: remove any text formatting or comments and language specification, and say nothing and explain nothing, the ONLY thing needed from you to output is the two lines from code redirected directly to run so no additional talking no formatting just clean two lines code that are NOT commented so remove any ''' ''' you find -- make sure he is not using .filter() in the wrong, if it is replace it with the .eq() as such ex: .eq('name', 'tipaza')-- AND NOT COMMENTED remove that '''python''' shit, MaKE sure it is not using supabase.from() it is Dangerous.. make it supabase.table() instead"),
+            ("user", "here is the previous llm's output do not forget to not use the ```python``` and just output pure code, literally what you should just output is two lines: line1(response = supabase.from()..(rest of code).execute()), line2(results=response.data) thats it no more no less bitch: {query}"),
         ]
     )
 
@@ -155,7 +157,10 @@ def chat_endpoint(req: QueryRequest):
     the_chain = main_chain | branch
 
     result = the_chain.invoke({"query": question, "prompt": prompt})
+    print("***************************************************************")
+    print("***************************************************************")
     print(result)
+    print("***************************************************************")
 
     local_vars = {"supabase": supabase}
 
