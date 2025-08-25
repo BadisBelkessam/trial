@@ -2,13 +2,15 @@ import os
 
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings
+from langchain_huggingface import HuggingFaceEndpointEmbeddings
 
 # Define the persistent directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
 persistent_directory = os.path.join(current_dir, "db", "chroma_db")
 
 # Define the embedding model
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+# embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+embeddings= HuggingFaceEndpointEmbeddings( model="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 
 # Load the existing vector store with the embedding function
 db = Chroma(persist_directory=persistent_directory,

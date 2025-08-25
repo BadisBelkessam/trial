@@ -9,25 +9,22 @@ from langchain_core.runnables import RunnableLambda
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from langchain_community.utilities import SQLDatabase
+from langchain_community.agent_toolkits import create_sql_agent
+
 
 
 load_dotenv()
 
-app = FastAPI()
+
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_KEY")
+ai = os.getenv("GROQ_API_KEY")
+supabase: Client = create_client(url, key)
 
 
-url: str = os.getenv("SUPABASE_URL")
-skey: str = os.getenv("SUPABASE_KEY")
-key = os.getenv("GROQ_API_KEY")
-supabase: Client = create_client(url, skey)
 
-
-class QueryRequest(BaseModel):
-    user_query: str
-
-@app.post("/chat")
-def chat_endpoint(req: QueryRequest):
-
+def hello():
 
 
     main_prompt = ChatPromptTemplate.from_messages(
@@ -39,7 +36,7 @@ def chat_endpoint(req: QueryRequest):
 
     model = ChatGroq(
         model="gemma2-9b-it",
-        api_key=key
+        api_key=ai
         )
 
 
@@ -118,7 +115,7 @@ def chat_endpoint(req: QueryRequest):
         ]
     ]
              AND START with just supabase. not supabase_client or such
-            AND DO NOT USE .from() use : .table()
+            AND DO NOT USE .from() ever it is dangerous, use : .table() instead
             AND DO NOT forget the .execute() at the end"""),
             ("user", "{query}"),
         ]
@@ -127,7 +124,7 @@ def chat_endpoint(req: QueryRequest):
     formatprompt = ChatPromptTemplate.from_messages(
         [
             ("system", "you are a text format corrector, the given query is passed from an llm and your job is to make sure it is well coded to be run, what you should do is: remove any text formatting or comments and language specification, and say nothing and explain nothing, the ONLY thing needed from you to output is the two lines from code redirected directly to run so no additional talking no formatting just clean two lines code that are NOT commented so remove any ''' ''' you find -- make sure he is not using .filter() in the wrong, if it is replace it with the .eq() as such ex: .eq('name', 'tipaza')-- AND NOT COMMENTED remove that '''python''' shit, MaKE sure it is not using supabase.from() it is Dangerous.. make it supabase.table() instead"),
-            ("user", "here is the previous llm's output do not forget to not use the ```python``` and just output pure code, literally what you should just output is two lines: line1(response = supabase.from()..(rest of code).execute()), line2(results=response.data) thats it no more no less bitch: {query}"),
+            ("user", "here is the previous llm's output do not forget to not use the ```python``` and just output pure code, literally what you should just output is two lines: line1(response = supabase.table()..(rest of code).execute()), line2(results=response.data) thats it no more no less bitch: {query}"),
         ]
     )
 
@@ -148,8 +145,8 @@ def chat_endpoint(req: QueryRequest):
 
 
 
-    #question = "what was found in tipaza as immobil"
-    question = req.user_query
+    question = "what was found in tipaza as immobil"
+    #question = req.user_query
 
     main_chain = main_prompt | model | StrOutputParser() 
 
@@ -157,10 +154,7 @@ def chat_endpoint(req: QueryRequest):
     the_chain = main_chain | branch
 
     result = the_chain.invoke({"query": question, "prompt": prompt})
-    print("***************************************************************")
-    print("***************************************************************")
     print(result)
-    print("***************************************************************")
 
     local_vars = {"supabase": supabase}
 
@@ -175,6 +169,8 @@ def chat_endpoint(req: QueryRequest):
 
 
 
+
+print(hello())
 
 
 
